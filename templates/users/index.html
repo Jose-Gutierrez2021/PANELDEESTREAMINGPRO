@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>
+Usuarios
+</h1>
+
+<form
+class="card form"
+method="POST"
+>
+
+<input
+name="name"
+placeholder="Nombre"
+required
+>
+
+<input
+name="username"
+placeholder="Usuario"
+required
+>
+
+input
+name="password"
+type="password"
+placeholder="Contraseña"
+required
+>
+
+<select name="role">
+
+<option value="seller">
+Vendedor
+</option>
+
+<option value="admin">
+Administrador
+</option>
+
+</select>
+
+<button>
+Crear usuario
+</button>
+
+</form>
+
+
+<div class="card">
+
+<table>
+
+<tr>
+
+<th>
+Nombre
+</th>
+
+<th>
+Usuario
+</th>
+
+<th>
+Rol
+</th>
+
+<th>
+Activo
+</th>
+
+</tr>
+
+{% for user in users %}
+
+<tr>
+
+<td>
+{{ user.name }}
+</td>
+
+<td>
+{{ user.username }}
+</td>
+
+<td>
+{{ user.role }}
+</td>
+
+<td>
+{{ "Sí" if user.active else "No" }}
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

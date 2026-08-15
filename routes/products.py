@@ -1,0 +1,73 @@
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    session
+)
+
+from extensions import db
+from models.product import Product
+
+
+products_bp = Blueprint(
+    "products",
+    __name__,
+    url_prefix="/products"
+)
+
+
+@products_bp.route(
+    "/",
+    methods=["GET", "POST"]
+)
+def index():
+
+    if session.get("role") != "admin":
+
+        flash(
+            "Solo el administrador puede gestionar productos."
+        )
+
+        return redirect(
+            url_for("dashboard.index")
+        )
+
+    if request.method == "POST":
+
+        product = Product(
+            name=request.form["name"],
+            provider=request.form.get("provider"),
+            duration_days=int(
+                request.form["duration_days"]
+            ),
+            sale_price=float(
+                request.form["sale_price"]
+            ),
+            cost_price=float(
+                request.form["cost_price"]
+            )
+        )
+
+        db.session.add(product)
+
+        db.session.commit()
+
+        flash(
+            "Producto creado."
+        )
+
+        return redirect(
+            url_for("products.index")
+        )
+
+    products = Product.query.order_by(
+        Product.id.desc()
+    ).all()
+
+    return render_template(
+        "products/index.html",
+        products=products
+    )

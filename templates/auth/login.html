@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1"
+>
+
+<title>
+StreamPanel Login
+</title>
+
+<link
+rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}"
+>
+
+</head>
+
+<body class="login-page">
+
+<div class="login-card">
+
+<h1>
+🚀 StreamPanel
+</h1>
+
+<p>
+Panel administrativo
+</p>
+
+{% with messages =
+get_flashed_messages() %}
+
+{% for message in messages %}
+
+<div class="alert">
+
+{{ message }}
+
+</div>
+
+{% endfor %}
+
+{% endwith %}
+
+<form method="POST">
+
+<input
+name="username"
+placeholder="Usuario"
+required
+>
+
+<input
+name="password"
+type="password"
+placeholder="Contraseña"
+required
+>
+
+<button>
+Iniciar sesión
+</button>
+
+</form>
+
+<p class="small">
+Usuario inicial: admin
+<br>
+Contraseña: Admin123!
+</p>
+
+</div>
+
+</body>
+
+</html>

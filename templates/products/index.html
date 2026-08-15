@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>
+Productos
+</h1>
+
+<form
+class="card form"
+method="POST"
+>
+
+<input
+name="name"
+placeholder="Nombre del producto"
+required
+>
+
+<input
+name="provider"
+placeholder="Proveedor"
+>
+
+<input
+name="duration_days"
+type="number"
+value="30"
+placeholder="Duración en días"
+required
+>
+
+<input
+name="sale_price"
+type="number"
+placeholder="Precio de venta"
+required
+>
+
+<input
+name="cost_price"
+type="number"
+placeholder="Costo"
+required
+>
+
+<button>
+Crear producto
+</button>
+
+</form>
+
+
+<div class="card">
+
+<table>
+
+<tr>
+
+<th>
+Producto
+</th>
+
+<th>
+Proveedor
+</th>
+
+<th>
+Duración
+</th>
+
+<th>
+Venta
+</th>
+
+<th>
+Costo
+</th>
+
+</tr>
+
+{% for product in products %}
+
+<tr>
+
+<td>
+{{ product.name }}
+</td>
+
+<td>
+{{ product.provider or "-" }}
+</td>
+
+<td>
+{{ product.duration_days }} días
+</td>
+
+<td>
+${{ "{:,.0f}".format(product.sale_price) }}
+</td>
+
+<td>
+${{ "{:,.0f}".format(product.cost_price) }}
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

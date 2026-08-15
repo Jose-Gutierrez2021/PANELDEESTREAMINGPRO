@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>
+Ventas
+</h1>
+
+<form
+class="card form"
+method="POST"
+>
+
+<select
+name="customer_id"
+required
+>
+
+<option value="">
+Cliente
+</option>
+
+{% for customer in customers %}
+
+<option
+value="{{ customer.id }}"
+>
+
+{{ customer.name }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+
+<select
+name="product_id"
+required
+>
+
+<option value="">
+Producto
+</option>
+
+{% for product in products %}
+
+<option
+value="{{ product.id }}"
+>
+
+{{ product.name }}
+-
+${{ "{:,.0f}".format(product.sale_price) }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+
+<select
+name="payment_method"
+>
+
+<option>
+Nequi
+</option>
+
+<option>
+Transferencia
+</option>
+
+<option>
+Efectivo
+</option>
+
+<option>
+Otro
+</option>
+
+</select>
+
+
+<button>
+Registrar venta
+</button>
+
+</form>
+
+
+<div class="card">
+
+<table>
+
+<tr>
+
+<th>
+ID
+</th>
+
+<th>
+Cliente
+</th>
+
+<th>
+Producto
+</th>
+
+<th>
+Vence
+</th>
+
+<th>
+Pago
+</th>
+
+<th>
+Valor
+</th>
+
+<th>
+Acciones
+</th>
+
+</tr>
+
+
+{% for sale in sales %}
+
+<tr>
+
+<td>
+#{{ sale.id }}
+</td>
+
+<td>
+{{ sale.customer.name }}
+</td>
+
+<td>
+{{ sale.product.name }}
+</td>
+
+<td>
+{{ sale.expires_at }}
+</td>
+
+<td>
+
+<span class="badge">
+
+{{ sale.payment_status }}
+
+</span>
+
+</td>
+
+<td>
+${{ "{:,.0f}".format(sale.price) }}
+</td>
+
+<td>
+
+{% if session.get("role") == "admin"
+and sale.payment_status == "pending" %}
+
+<form
+method="POST"
+action="/payments/{{ sale.id }}"
+>
+
+<input
+name="reference"
+placeholder="Referencia"
+/>
+
+<button
+name="action"
+value="verify"
+>
+
+Verificar
+
+</button>
+
+<button
+name="action"
+value="reject"
+>
+
+Rechazar
+
+</button>
+
+</form>
+
+{% endif %}
+
+
+<form
+method="POST"
+action="/renewals/{{ sale.id }}"
+>
+<button>
+Renovar
+</button>
+
+</form>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

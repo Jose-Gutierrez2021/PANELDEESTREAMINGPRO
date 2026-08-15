@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>
+Inventario
+</h1>
+
+<form
+class="card form"
+method="POST"
+>
+
+<select
+name="product_id"
+required
+>
+
+<option value="">
+Seleccionar producto
+</option>
+
+{% for product in products %}
+
+<option
+value="{{ product.id }}"
+>
+
+{{ product.name }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+
+<input
+name="reference"
+placeholder="Referencia de licencia"
+required
+>
+
+
+<button>
+Agregar inventario
+</button>
+
+</form>
+
+
+<div class="card">
+
+<table>
+
+<tr>
+
+<th>
+Producto
+</th>
+
+<th>
+Referencia
+</th>
+
+<th>
+Estado
+</th>
+
+<th>
+Vencimiento
+</th>
+
+</tr>
+
+{% for item in items %}
+
+<tr>
+
+<td>
+{{ item.product.name }}
+</td>
+
+<td>
+{{ item.reference }}
+</td>
+
+<td>
+
+<span class="badge">
+
+{{ item.status }}
+
+</span>
+
+</td>
+
+<td>
+{{ item.expires_at or "-" }}
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

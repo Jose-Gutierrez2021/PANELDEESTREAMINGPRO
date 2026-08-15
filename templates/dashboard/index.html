@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>
+Dashboard
+</h1>
+
+<div class="grid">
+
+<div class="card">
+
+<span>
+Ingresos
+</span>
+
+<strong>
+${{ "{:,.0f}".format(revenue) }}
+</strong>
+
+</div>
+
+
+<div class="card">
+
+<span>
+Ganancias
+</span>
+
+<strong>
+${{ "{:,.0f}".format(profit) }}
+</strong>
+
+</div>
+
+
+<div class="card">
+
+<span>
+Clientes
+</span>
+
+<strong>
+{{ customers }}
+</strong>
+
+</div>
+
+
+<div class="card">
+
+<span>
+Vencen en 7 días
+</span>
+
+<strong>
+{{ expiring }}
+</strong>
+
+</div>
+
+</div>
+
+
+<div class="card chart-card">
+
+<h2>
+Ventas últimos 7 días
+</h2>
+
+<canvas id="salesChart"></canvas>
+
+</div>
+
+
+<script>
+
+window.salesLabels =
+{{ labels | tojson }};
+
+window.salesValues =
+{{ values | tojson }};
+
+</script>
+
+<script
+src="{{ url_for('static', filename='js/dashboard.js') }}"
+></script>
+
+{% endblock %}
