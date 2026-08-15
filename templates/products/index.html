@@ -77,6 +77,10 @@ Venta
 Costo
 </th>
 
+<th>
+Acciones
+</th>
+
 </tr>
 
 {% for product in products %}
@@ -101,6 +105,18 @@ ${{ "{:,.0f}".format(product.sale_price) }}
 
 <td>
 ${{ "{:,.0f}".format(product.cost_price) }}
+</td>
+
+<td>
+
+<!-- Inline edit form -->
+<form method="POST" action="/products/{{ product.id }}/edit" style="display:flex;gap:8px;align-items:center;">
+    <input name="sale_price" type="number" step="0.01" value="{{ product.sale_price }}" placeholder="Precio" style="width:100px;" />
+    <input name="cost_price" type="number" step="0.01" value="{{ product.cost_price }}" placeholder="Costo" style="width:100px;" />
+    <input name="duration_days" type="number" value="{{ product.duration_days }}" placeholder="Duración" style="width:80px;" />
+    <button type="submit">Guardar</button>
+</form>
+
 </td>
 
 </tr>

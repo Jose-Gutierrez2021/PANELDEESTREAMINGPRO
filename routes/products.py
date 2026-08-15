@@ -71,3 +71,44 @@ def index():
         "products/index.html",
         products=products
     )
+
+
+@products_bp.route(
+    "/<int:product_id>/edit",
+    methods=["POST"]
+)
+def edit_product(product_id):
+
+    if session.get("role") != "admin":
+
+        flash(
+            "Solo el administrador puede editar productos."
+        )
+
+        return redirect(
+            url_for("dashboard.index")
+        )
+
+    product = Product.query.get_or_404(product_id)
+
+    # Only update provided fields
+    try:
+        if "sale_price" in request.form:
+            product.sale_price = float(request.form["sale_price"])
+        if "cost_price" in request.form:
+            product.cost_price = float(request.form["cost_price"])
+        if "duration_days" in request.form:
+            product.duration_days = int(request.form["duration_days"])
+        # optional: active flag
+        if "active" in request.form:
+            product.active = request.form.get("active") in ("1", "true", "on")
+
+        db.session.commit()
+
+        flash("Producto actualizado.")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error al actualizar: {e}")
+
+    return redirect(url_for("products.index"))
