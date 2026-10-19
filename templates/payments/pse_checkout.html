@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<header class="page-heading">
+<div>
+<span class="eyebrow">PAGO SEGURO</span>
+<h1>{{ checkout_title }}</h1>
+<p>{{ checkout_intro }}</p>
+</div>
+</header>
+
+<section class="card pse-checkout-card">
+<div class="pse-order-summary">
+<div>
+<span class="eyebrow">{{ order_title }}</span>
+<h2>{{ order_name }}</h2>
+</div>
+<strong>${{ "{:,.0f}".format(order_amount) }} <small>COP</small></strong>
+</div>
+
+{% if checkout_error %}
+<div class="payment-notice payment-notice-warning" role="alert">
+<strong>No se puede iniciar el pago PSE</strong>
+<span>{{ checkout_error }}</span>
+</div>
+{% elif active_payment %}
+<div class="payment-notice" role="status">
+<strong>Pago enviado al banco</strong>
+<span>La transacción está pendiente de confirmación. No inicies otro pago para esta venta. El estado se actualizará cuando Wompi confirme el resultado.</span>
+</div>
+{% elif checkout_info and checkout_info.banks %}
+<form
+class="form pse-checkout-form"
+method="POST"
+action="{{ checkout_action }}"
+data-loading-message="Conectando con PSE..."
+>
+<input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+<label class="form-field">
+<span>Nombre completo del titular</span>
+<input name="full_name" type="text" autocomplete="name" maxlength="100" required>
+</label>
+
+<label class="form-field">
+<span>Correo electrónico</span>
+<input name="email" type="email" autocomplete="email" maxlength="254" required>
+</label>
+
+<label class="form-field">
+<span>Celular</span>
+<input name="phone_number" type="tel" inputmode="tel" autocomplete="tel" placeholder="3001234567" required>
+</label>
+
+<label class="form-field">
+<span>Tipo de persona</span>
+<select name="user_type" required>
+<option value="0">Persona natural</option>
+<option value="1">Persona jurídica</option>
+</select>
+</label>
+
+<label class="form-field">
+<span>Tipo de documento</span>
+<select name="legal_id_type" required>
+<option value="CC">Cédula de ciudadanía</option>
+<option value="CE">Cédula de extranjería</option>
+<option value="NIT">NIT</option>
+<option value="PP">Pasaporte</option>
+<option value="TI">Tarjeta de identidad</option>
+<option value="DNI">DNI</option>
+<option value="OTHER">Otro</option>
+</select>
+</label>
+
+<label class="form-field">
+<span>Número de documento</span>
+<input name="legal_id" type="text" inputmode="text" minlength="5" maxlength="20" pattern="[A-Za-z0-9]{5,20}" required>
+</label>
+
+<label class="form-field form-field-full">
+<span>Banco desde el que pagarás</span>
+<select name="financial_institution_code" required>
+<option value="">Selecciona tu banco</option>
+{% for bank in checkout_info.banks %}
+<option value="{{ bank.code }}">{{ bank.name }}</option>
+{% endfor %}
+</select>
+</label>
+
+<div class="pse-consents form-field-full">
+<label class="pse-consent">
+<input type="checkbox" name="accept_terms" value="yes" required>
+<span>Leí y acepto los <a href="{{ checkout_info.acceptance_url }}" target="_blank" rel="noopener noreferrer">términos y condiciones de Wompi</a>.</span>
+</label>
+<label class="pse-consent">
+<input type="checkbox" name="accept_personal_data" value="yes" required>
+<span>Leí y autorizo el tratamiento de datos personales según la <a href="{{ checkout_info.personal_data_url }}" target="_blank" rel="noopener noreferrer">política de datos de Wompi</a>.</span>
+</label>
+</div>
+
+<input type="hidden" name="acceptance_token" value="{{ checkout_info.acceptance_token }}">
+<input type="hidden" name="personal_data_token" value="{{ checkout_info.personal_data_token }}">
+
+<div class="pse-checkout-actions form-field-full">
+<a class="button button-secondary" href="{{ checkout_back_url }}">Volver</a>
+<button class="button button-primary" type="submit">Continuar al banco por PSE</button>
+</div>
+</form>
+{% elif checkout_info %}
+<div class="payment-notice payment-notice-warning" role="alert">
+<strong>No hay bancos PSE disponibles</strong>
+<span>Wompi no devolvió instituciones financieras. Inténtalo más tarde.</span>
+</div>
+{% endif %}
+</section>
+
+{% endblock %}

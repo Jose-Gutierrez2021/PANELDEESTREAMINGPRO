@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
+
+<title>
+Crear cuenta | StreamPanel PRO
+</title>
+
+<link
+rel="icon"
+type="image/png"
+href="{{ url_for('static', filename='img/brand-logo.png', v='20261014') }}"
+>
+
+<link
+rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css', v='black-gold-luxury-20261014') }}"
+>
+<script src="{{ url_for('static', filename='js/ui.js', v='music-playback-state-20261019') }}" defer></script>
+
+</head>
+
+<body class="login-page">
+
+<main class="login-layout">
+<section class="login-brand-panel" aria-label="StreamPanel PRO">
+<div class="login-brand">
+<img class="brand-mark" src="{{ url_for('static', filename='img/brand-logo.png') }}" alt="" aria-hidden="true">
+<span>StreamPanel <strong>PRO</strong></span>
+</div>
+<div class="login-pitch">
+<span class="eyebrow">TU ESPACIO DE TRABAJO</span>
+<h1>Empieza a gestionar<br><span>con más claridad.</span></h1>
+<p>Crea tu cuenta para recargar saldo, comprar productos al por mayor y gestionar tu inventario de reventa.</p>
+</div>
+<div class="login-panel-footer">
+<span class="status-dot"></span>
+Acceso seguro para tu equipo
+</div>
+</section>
+
+<section class="login-form-panel">
+<div class="login-card">
+<span class="eyebrow">NUEVA CUENTA</span>
+<h1>Crear cuenta</h1>
+<p>Completa tus datos para comenzar.</p>
+
+{% with messages =
+get_flashed_messages(with_categories=true) %}
+
+{% for category, message in messages %}
+
+<div class="alert alert-{{ category }}" role="alert">
+
+{{ message }}
+
+</div>
+
+{% endfor %}
+
+{% endwith %}
+
+<form method="POST" data-loading-message="Creando tu cuenta...">
+
+<label for="name">Nombre completo</label>
+<input
+id="name"
+name="name"
+type="text"
+autocomplete="name"
+maxlength="120"
+placeholder="Tu nombre"
+required
+>
+
+<label for="username">Usuario</label>
+<input
+id="username"
+name="username"
+type="text"
+autocomplete="username"
+maxlength="80"
+placeholder="Elige un nombre de usuario"
+required
+>
+
+<label for="password">Contraseña</label>
+<div class="password-field">
+<input
+id="password"
+name="password"
+type="password"
+autocomplete="new-password"
+minlength="8"
+placeholder="Al menos 8 caracteres"
+required
+>
+<button
+class="password-toggle"
+type="button"
+aria-label="Mostrar contraseña"
+aria-pressed="false"
+data-password-toggle="password"
+>
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"></path>
+<circle cx="12" cy="12" r="2.5"></circle>
+</svg>
+</button>
+</div>
+
+<label for="password_confirmation">Confirmar contraseña</label>
+<input
+id="password_confirmation"
+name="password_confirmation"
+type="password"
+autocomplete="new-password"
+minlength="8"
+placeholder="Repite tu contraseña"
+required
+>
+
+<button class="button button-primary login-submit" type="submit">
+Crear mi cuenta
+</button>
+
+</form>
+
+<p class="register-prompt">
+¿Ya tienes una cuenta?
+<a href="{{ url_for('auth.login') }}">Iniciar sesión</a>
+</p>
+
+</div>
+</section>
+</main>
+
+<div
+class="loading-screen"
+id="loading-screen"
+aria-hidden="true"
+>
+<div class="loading-card" role="status" aria-live="polite">
+<span class="loading-spinner" aria-hidden="true"></span>
+<span class="loading-message">Creando tu cuenta...</span>
+</div>
+</div>
+
+</body>
+
+</html>

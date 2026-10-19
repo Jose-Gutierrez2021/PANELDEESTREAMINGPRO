@@ -9,9 +9,6 @@ from flask import (
 )
 
 from models.sale import Sale
-from models.customer import Customer
-
-
 
 dashboard_bp = Blueprint(
     "dashboard",
@@ -27,6 +24,9 @@ def index():
         return redirect(
             url_for("auth.login")
         )
+
+    if session.get("role") == "reseller":
+        return redirect(url_for("reseller.index"))
 
     sales = Sale.query.all()
 
@@ -61,6 +61,14 @@ def index():
 
     values = []
 
+    daily_totals = {}
+    for sale in verified:
+        if sale.sale_date:
+            sale_day = sale.sale_date.date()
+            daily_totals[sale_day] = (
+                daily_totals.get(sale_day, 0) + float(sale.price)
+            )
+
     for i in range(6, -1, -1):
 
         current = today - timedelta(days=i)
@@ -69,20 +77,21 @@ def index():
             current.strftime("%d/%m")
         )
 
-        total = sum(
-            float(sale.price)
-            for sale in verified
-            if sale.sale_date.date() == current
-        )
+        values.append(daily_totals.get(current, 0))
 
-        values.append(total)
+    recent_sales = Sale.query.order_by(
+        Sale.sale_date.desc(),
+        Sale.id.desc()
+    ).limit(5).all()
 
     return render_template(
         "dashboard/index.html",
         revenue=revenue,
         profit=profit,
-        customers=Customer.query.count(),
+        today_label=f"HOY · {today.strftime('%d/%m/%Y')}",
         expiring=expiring,
+        verified_sales=len(verified),
+        recent_sales=recent_sales,
         labels=labels,
         values=values
     )

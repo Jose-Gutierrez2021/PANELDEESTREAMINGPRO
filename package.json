@@ -1,0 +1,7 @@
+{
+  "name": "streampanel-pro-dev-monitor",
+  "private": true,
+  "scripts": {
+    "dev": "node dev-monitor.js"
+  }
+}

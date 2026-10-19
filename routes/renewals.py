@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 from flask import (
     Blueprint,
-    request,
+    abort,
     redirect,
     url_for,
     flash,
@@ -12,6 +12,8 @@ from flask import (
 from extensions import db
 from models.sale import Sale
 from models.inventory import Inventory
+from services.wompi import is_configured
+from services.security import validate_csrf_token
 
 
 renewals_bp = Blueprint(
@@ -33,9 +35,33 @@ def renew(sale_id):
             url_for("auth.login")
         )
 
+    if session.get("role") not in {"admin", "seller"}:
+        return redirect(url_for("reseller.index"))
+
+    if not validate_csrf_token():
+        abort(400)
+
     old_sale = Sale.query.get_or_404(
         sale_id
     )
+
+    if old_sale.payment_status != "verified":
+        flash(
+            "Solo puedes renovar una venta con el pago PSE confirmado.",
+            "error",
+        )
+        return redirect(
+            url_for("sales.index")
+        )
+
+    if not is_configured():
+        flash(
+            "Configura las llaves de Wompi antes de crear renovaciones PSE.",
+            "error",
+        )
+        return redirect(
+            url_for("sales.index")
+        )
 
     product = old_sale.product
 
@@ -78,7 +104,7 @@ def renew(sale_id):
         expires_at=expiration,
         price=product.sale_price,
         cost=product.cost_price,
-        payment_method=old_sale.payment_method,
+        payment_method="PSE",
         payment_status="pending"
     )
 
@@ -87,9 +113,9 @@ def renew(sale_id):
     db.session.commit()
 
     flash(
-        f"Renovación #{new_sale.id} creada."
+        f"Renovación #{new_sale.id} creada. Completa el pago por PSE.",
+        "info",
     )
-
     return redirect(
-        url_for("sales.index")
+        url_for("payments.pse_checkout", sale_id=new_sale.id)
     )

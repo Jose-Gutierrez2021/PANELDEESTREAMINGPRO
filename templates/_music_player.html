@@ -1,0 +1,119 @@
+<aside class="music-widget" data-music-widget>
+<section class="music-dock" aria-label="Reproductor de música">
+<div class="music-track-info">
+<div class="music-record" aria-hidden="true">
+<span>♫</span>
+</div>
+<div class="music-current-track">
+<strong data-music-title>Preparando música</strong>
+<span data-music-artist></span>
+</div>
+</div>
+
+<div class="music-playback">
+<div class="music-controls">
+<button
+class="music-control music-control-skip"
+type="button"
+aria-label="Canción anterior"
+title="Canción anterior"
+data-music-previous
+>
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+<path d="M6 5v14M19 6 9 12l10 6V6Z"></path>
+</svg>
+</button>
+<button
+class="music-control music-control-main"
+type="button"
+aria-label="Reproducir"
+title="Reproducir"
+data-playback-state="paused"
+data-music-play-pause
+>
+<svg data-music-play-icon viewBox="0 0 24 24" aria-hidden="true">
+<path d="M8 5.75v12.5L18 12 8 5.75Z" fill="currentColor"></path>
+</svg>
+<svg data-music-pause-icon viewBox="0 0 24 24" aria-hidden="true">
+<path d="M7 5h4v14H7zM15 5h4v14h-4z" fill="currentColor"></path>
+</svg>
+</button>
+<button
+class="music-control music-control-skip"
+type="button"
+aria-label="Siguiente canción"
+title="Siguiente canción"
+data-music-next
+>
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+<path d="M18 5v14M5 6l10 6-10 6V6Z"></path>
+</svg>
+</button>
+</div>
+<div class="music-progress-row">
+<span class="music-time" data-music-current-time>0:00</span>
+<input
+class="music-progress"
+type="range"
+min="0"
+max="100"
+value="0"
+step="0.1"
+aria-label="Posición de la canción"
+data-music-progress
+>
+<span class="music-time" data-music-duration>0:00</span>
+</div>
+</div>
+
+<div class="music-sound-controls" aria-label="Controles de sonido">
+<div class="music-volume">
+<span class="volume-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24" focusable="false">
+<path d="M4 9v6h4l5 4V5L8 9H4Z"></path>
+<path d="M16 9a5 5 0 0 1 0 6M18.5 6.5a8.5 8.5 0 0 1 0 11"></path>
+</svg>
+</span>
+<input
+class="volume-slider"
+type="range"
+min="0"
+max="1"
+value="0.65"
+step="0.01"
+aria-label="Volumen"
+data-music-volume
+>
+</div>
+<div class="music-bass">
+<span class="bass-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24" focusable="false">
+<path d="M5 18V6M12 18V6M19 18V6"></path>
+<path d="M3 14h4M10 9h4M17 12h4"></path>
+</svg>
+</span>
+<input
+class="bass-slider"
+type="range"
+min="0"
+max="12"
+value="4"
+step="1"
+aria-label="Realce de bajos, en decibelios"
+title="Realce de bajos"
+data-music-bass
+>
+<output class="bass-value" data-music-bass-value>+4 dB</output>
+</div>
+</div>
+
+<audio
+data-music-audio
+preload="metadata"
+>
+Tu navegador no admite la reproducción de audio.
+</audio>
+<script type="application/json" data-music-playlist>{{ music_tracks|tojson }}</script>
+<span class="sr-only" role="status" aria-live="polite" data-music-status></span>
+</section>
+</aside>

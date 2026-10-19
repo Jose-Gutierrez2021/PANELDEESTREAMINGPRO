@@ -36,7 +36,7 @@ def index():
         user = User(
             name=request.form["name"],
             username=request.form["username"],
-            role=request.form["role"]
+            role="seller"
         )
 
         user.set_password(

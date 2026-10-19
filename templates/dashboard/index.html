@@ -2,75 +2,102 @@
 
 {% block content %}
 
-<h1>
-Dashboard
-</h1>
+<header class="dashboard-welcome">
+<div>
+<span class="eyebrow">PANEL DE CONTROL</span>
+<h1>Hola, {{ session.get("name", "equipo") }}</h1>
+<p>Este es el resumen de actividad de tu negocio.</p>
+</div>
+<div class="dashboard-date">
+<span class="dashboard-date-dot"></span>
+{{ today_label }}
+</div>
+</header>
 
-<div class="grid">
-
-<div class="card">
-
-<span>
-Ingresos
+<section class="dashboard-metrics" aria-label="Resumen del negocio">
+<article class="dashboard-metric dashboard-metric-primary">
+<div class="metric-topline">
+<span class="metric-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24"><path d="M4 7h16M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path><path d="M8 15h3"></path></svg>
 </span>
-
-<strong>
-${{ "{:,.0f}".format(revenue) }}
-</strong>
-
+<span class="metric-period">PAGOS VERIFICADOS</span>
 </div>
+<span class="metric-label">Ingresos</span>
+<strong>{{ "{:,.0f}".format(revenue) }} COP</strong>
+<span class="metric-footnote">Total confirmado en pesos</span>
+</article>
 
-
-<div class="card">
-
-<span>
-Ganancias
+<article class="dashboard-metric">
+<div class="metric-topline">
+<span class="metric-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24"><path d="M4 17 9 12l3 3 7-8"></path><path d="M14 7h5v5"></path></svg>
 </span>
-
-<strong>
-${{ "{:,.0f}".format(profit) }}
-</strong>
-
+<span class="metric-period">ACUMULADO</span>
 </div>
+<span class="metric-label">Ganancias</span>
+<strong>{{ "{:,.0f}".format(profit) }} COP</strong>
+<span class="metric-footnote">Ingresos menos costos</span>
+</article>
 
-
-<div class="card">
-
-<span>
-Clientes
+<article class="dashboard-metric">
+<div class="metric-topline">
+<span class="metric-icon metric-icon-green" aria-hidden="true">
+<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
 </span>
+<span class="metric-period">PRÓXIMOS 7 DÍAS</span>
+</div>
+<span class="metric-label">Por vencer</span>
+<strong>{{ expiring }}</strong>
+<span class="metric-footnote">Suscripciones activas</span>
+</article>
+</section>
 
-<strong>
-{{ customers }}
-</strong>
+<section class="dashboard-lower-grid">
+<article class="card dashboard-chart-card">
+<div class="dashboard-section-heading">
+<div>
+<span class="eyebrow">RENDIMIENTO</span>
+<h2>Ingresos recientes</h2>
+</div>
+<span class="chart-period"><span></span> Últimos 7 días</span>
+</div>
+<div class="dashboard-chart-wrap">
+<canvas id="salesChart" aria-label="Gráfico de ingresos de los últimos siete días en pesos colombianos" role="img"></canvas>
+</div>
+</article>
 
+<article class="card recent-sales-card">
+<div class="dashboard-section-heading">
+<div>
+<span class="eyebrow">ACTIVIDAD</span>
+<h2>Ventas recientes</h2>
+</div>
+<a class="text-link" href="{{ url_for('sales.index') }}">Ver todas</a>
 </div>
 
-
-<div class="card">
-
-<span>
-Vencen en 7 días
+{% if recent_sales %}
+<div class="recent-sales-list">
+{% for sale in recent_sales %}
+<div class="recent-sale">
+<span class="recent-sale-icon" aria-hidden="true">
+{{ sale.product.name[:1] | upper }}
 </span>
-
-<strong>
-{{ expiring }}
-</strong>
-
+<div class="recent-sale-info">
+<strong>{{ sale.product.name }}</strong>
+<span>Venta #{{ sale.id }} · {{ sale.sale_date.strftime("%d/%m") if sale.sale_date else "Sin fecha" }}</span>
 </div>
-
+<div class="recent-sale-amount">
+<strong>{{ "{:,.0f}".format(sale.price) }} COP</strong>
+<span class="payment-status payment-status-{{ sale.payment_status }}">{{ sale.payment_status }}</span>
 </div>
-
-
-<div class="card chart-card">
-
-<h2>
-Ventas últimos 7 días
-</h2>
-
-<canvas id="salesChart"></canvas>
-
 </div>
+{% endfor %}
+</div>
+{% else %}
+<p class="dashboard-empty">Todavía no hay ventas registradas.</p>
+{% endif %}
+</article>
+</section>
 
 
 <script>
@@ -80,6 +107,9 @@ window.salesLabels =
 
 window.salesValues =
 {{ values | tojson }};
+
+window.salesCurrency = "COP";
+window.salesCurrencySymbol = "COP";
 
 </script>
 

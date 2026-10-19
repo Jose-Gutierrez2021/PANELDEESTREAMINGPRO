@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="page-heading">
+<div>
+<span class="eyebrow">SALDO PREPAGO</span>
+<h1>Mi cartera</h1>
+<p>Recarga por PSE para comprar productos al precio mayorista publicado.</p>
+</div>
+</header>
+
+<section class="wallet-layout">
+<div class="card wallet-balance-card">
+<span class="eyebrow">SALDO DISPONIBLE</span>
+<strong>${{ "{:,.0f}".format(wallet.balance) }} <small>COP</small></strong>
+<p>Las recargas se acreditan únicamente después de la confirmación de Wompi.</p>
+</div>
+
+<div class="card">
+<span class="eyebrow">RECARGAR CON PSE</span>
+<h2>Agrega saldo</h2>
+<p>Recarga mínima: ${{ "{:,.0f}".format(minimum_topup) }} COP.</p>
+{% if not pse_configured %}
+<div class="payment-notice payment-notice-warning" role="status">
+Wompi PSE no está configurado todavía. La opción se habilitará al agregar sus llaves privadas en el servidor.
+</div>
+{% endif %}
+<form class="form wallet-topup-form" method="POST" data-loading-message="Preparando recarga PSE...">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+<label class="form-field">
+<span>Valor de la recarga (COP)</span>
+<input name="amount" type="number" min="10000" step="1000" required placeholder="10000">
+</label>
+<button class="button button-primary" type="submit" {% if not pse_configured %}disabled{% endif %}>Continuar por PSE</button>
+</form>
+</div>
+</section>
+
+<section class="card">
+<div class="sales-history-heading">
+<div>
+<span class="eyebrow">MOVIMIENTOS</span>
+<h2>Actividad de la cartera</h2>
+</div>
+</div>
+<table>
+<thead><tr><th>Fecha</th><th>Movimiento</th><th>Valor</th></tr></thead>
+<tbody>
+{% for movement in movements %}
+<tr>
+<td>{{ movement.created_at or "-" }}</td>
+<td>
+{% if movement.movement_type == "pse_topup" %}Recarga PSE{% else %}Compra mayorista{% endif %}
+</td>
+<td>${{ "{:,.0f}".format(movement.amount) }} COP</td>
+</tr>
+{% else %}
+<tr><td colspan="3" class="table-empty">Aún no hay movimientos.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</section>
+
+<section class="card">
+<div class="sales-history-heading">
+<div>
+<span class="eyebrow">PAGOS PSE</span>
+<h2>Recargas recientes</h2>
+</div>
+</div>
+<table>
+<thead><tr><th>Fecha</th><th>Valor</th><th>Estado</th></tr></thead>
+<tbody>
+{% for topup in topups %}
+<tr>
+<td>{{ topup.created_at or "-" }}</td>
+<td>${{ "{:,.0f}".format(topup.amount) }} COP</td>
+<td><span class="payment-status payment-status-{{ topup.status }}">{{ topup.status }}</span></td>
+</tr>
+{% else %}
+<tr><td colspan="3" class="table-empty">Aún no has solicitado recargas.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</section>
+{% endblock %}

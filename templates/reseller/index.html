@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="page-heading">
+<div>
+<span class="eyebrow">COMPRA MAYORISTA</span>
+<h1>Reventa</h1>
+<p>Compra unidades con tu saldo y define el precio al que las ofrecerás por fuera de StreamPanel.</p>
+</div>
+<a class="button button-secondary" href="{{ url_for('wallet.index') }}">Recargar saldo</a>
+</header>
+
+<div class="reseller-balance">
+Saldo disponible <strong>${{ "{:,.0f}".format(wallet.balance if wallet else 0) }} COP</strong>
+</div>
+
+<section class="reseller-products">
+{% for item in products %}
+<article class="card reseller-product-card">
+<div class="reseller-product-heading">
+<div>
+<span class="eyebrow">{{ item.product.provider or "PRODUCTO" }}</span>
+<h2 class="reseller-product-title">
+{% set brand = product_brand(item.product.name) %}
+{% if brand %}
+<span class="product-brand-tile product-brand-tile-compact" style="--brand-color: #{{ brand.color }}">
+<img class="product-brand-logo{% if brand.is_wordmark %} product-brand-logo-wordmark{% endif %}" src="{{ brand.icon_url }}" alt="" loading="lazy" decoding="async">
+<span class="product-brand-fallback" aria-hidden="true">{{ brand.initials }}</span>
+</span>
+{% endif %}
+{{ item.product.name }}
+</h2>
+</div>
+<span class="reseller-stock-count">{{ item.available_count }} disponibles</span>
+</div>
+
+<div class="reseller-price-summary">
+<span>Precio mayorista</span>
+<strong>${{ "{:,.0f}".format(item.offer.wholesale_price) }} COP</strong>
+</div>
+<p class="reseller-recommendation">
+Recomendado con {{ item.offer.suggested_margin_percent }}% de margen:
+<strong>${{ "{:,.0f}".format(item.offer.wholesale_price * (1 + item.offer.suggested_margin_percent / 100)) }} COP</strong>
+</p>
+
+<form class="form reseller-buy-form" method="POST" action="{{ url_for('reseller.buy') }}">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="product_id" value="{{ item.product.id }}">
+<label class="form-field">
+<span>Cantidad</span>
+<input type="number" name="quantity" min="1" max="{{ item.available_count }}" value="1" required {% if item.available_count == 0 %}disabled{% endif %}>
+</label>
+<button class="button button-primary" type="submit" {% if item.available_count == 0 %}disabled{% endif %}>Comprar unidades</button>
+</form>
+
+<div class="reseller-pricing">
+<h3>Tu precio de reventa</h3>
+<form class="reseller-inline-form" method="POST" action="{{ url_for('reseller.update_pricing', product_id=item.product.id) }}">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="pricing_field" value="margin">
+<label class="form-field">
+<span>Margen (%)</span>
+<input type="number" name="margin_percent" min="0" step="0.01" value="{{ item.margin }}" required>
+</label>
+<button class="button button-secondary" type="submit">Aplicar margen</button>
+</form>
+<form class="reseller-inline-form" method="POST" action="{{ url_for('reseller.update_pricing', product_id=item.product.id) }}">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="pricing_field" value="price">
+<label class="form-field">
+<span>Precio (COP)</span>
+<input type="number" name="resale_price" min="{{ item.offer.wholesale_price }}" step="1" value="{{ item.resale_price }}" required>
+</label>
+<button class="button button-secondary" type="submit">Guardar precio</button>
+</form>
+<p class="reseller-profit">
+Ganancia estimada por unidad:
+<strong>${{ "{:,.0f}".format(item.resale_price - item.offer.wholesale_price) }} COP</strong>
+</p>
+</div>
+</article>
+{% else %}
+<div class="card table-empty">El administrador todavía no ha publicado productos para compra mayorista.</div>
+{% endfor %}
+</section>
+
+<section class="card">
+<div class="sales-history-heading">
+<div>
+<span class="eyebrow">INVENTARIO DE TU CUENTA</span>
+<h2>Unidades compradas</h2>
+</div>
+</div>
+<p>Las ventas a tus clientes se realizan fuera de StreamPanel; este inventario queda asignado a tu cuenta.</p>
+<table>
+<thead><tr><th>Producto</th><th>Referencia</th><th>Vencimiento</th><th>Compra</th></tr></thead>
+<tbody>
+{% for item in stock %}
+<tr>
+<td>{{ item.inventory.product.name }}</td>
+<td>{{ item.inventory.reference }}</td>
+<td>{{ item.inventory.expires_at or "-" }}</td>
+<td>#{{ item.order_id }}</td>
+</tr>
+{% else %}
+<tr><td colspan="4" class="table-empty">Todavía no has comprado unidades.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</section>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<header class="page-heading">
+<div>
+<span class="eyebrow">RESUMEN FINANCIERO</span>
+<h1>Reportes</h1>
+<p>Ventas con pago verificado y resultados acumulados.</p>
+</div>
+</header>
+
+<section class="grid" aria-label="Resumen de ventas">
+<article class="card">
+<span>Total vendido</span>
+<strong>${{ "{:,.0f}".format(total) }}</strong>
+</article>
+
+<article class="card">
+<span>Ganancia</span>
+<strong>${{ "{:,.0f}".format(profit) }}</strong>
+</article>
+
+<article class="card">
+<span>Ventas verificadas</span>
+<strong>{{ sales | length }}</strong>
+</article>
+</section>
+
+<section class="card">
+<h2>Detalle de ventas verificadas</h2>
+
+{% if sales %}
+<table>
+<thead>
+<tr>
+<th>Venta</th>
+<th>Fecha</th>
+<th>Producto</th>
+<th>Vendedor</th>
+<th>Método de pago</th>
+<th>Valor</th>
+<th>Ganancia</th>
+</tr>
+</thead>
+<tbody>
+{% for sale in sales %}
+<tr>
+<td>#{{ sale.id }}</td>
+<td>{{ sale.sale_date.strftime("%d/%m/%Y") if sale.sale_date else "-" }}</td>
+<td>{{ sale.product.name }}</td>
+<td>{{ sale.seller.name }}</td>
+<td>{{ sale.payment_method or "-" }}</td>
+<td>${{ "{:,.0f}".format(sale.price) }}</td>
+<td>${{ "{:,.0f}".format(sale.price - sale.cost) }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p class="report-empty">Todavía no hay ventas con el pago verificado.</p>
+{% endif %}
+</section>
+
+{% endblock %}

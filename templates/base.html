@@ -8,17 +8,23 @@
 
 <meta
 name="viewport"
-content="width=device-width, initial-scale=1.0">
+content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
 <title>
 StreamPanel PRO
 </title>
 
+<link
+rel="icon"
+type="image/png"
+href="{{ url_for('static', filename='img/brand-logo.png', v='20261014') }}"
+>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <link
 rel="stylesheet"
-href="{{ url_for('static', filename='css/style.css') }}"
+href="{{ url_for('static', filename='css/style.css', v='active-nav-centered-20261019') }}"
 >
 
 </head>
@@ -28,29 +34,47 @@ href="{{ url_for('static', filename='css/style.css') }}"
 <nav>
 
 <div class="brand">
-🚀 StreamPanel PRO
+<img class="brand-mark" src="{{ url_for('static', filename='img/brand-logo.png') }}" alt="" aria-hidden="true">
+<span>StreamPanel <strong>PRO</strong></span>
 </div>
 
-<a href="/">
+<div class="nav-links">
+{% if session.get("role") in ["admin", "seller"] %}
+<a
+href="/"
+{% if request.endpoint == "dashboard.index" %}class="is-current" aria-current="page"{% endif %}
+>
 Dashboard
 </a>
 
-<a href="/sales/">
+<a
+href="/sales/"
+{% if request.blueprint == "sales" %}class="is-current" aria-current="page"{% endif %}
+>
 Ventas
 </a>
+{% endif %}
 
-<a href="/customers/">
-Clientes
+{% if session.get("user_id") and session.get("role") != "admin" %}
+<a
+href="{{ url_for('reseller.index') }}"
+{% if request.blueprint == "reseller" %}class="is-current" aria-current="page"{% endif %}
+>
+Reventa
 </a>
+
+<a
+href="{{ url_for('wallet.index') }}"
+{% if request.blueprint == "wallet" %}class="is-current" aria-current="page"{% endif %}
+>
+Mi cartera
+</a>
+{% endif %}
 
 {% if session.get("role") == "admin" %}
 
 <a href="/products/">
 Productos
-</a>
-
-<a href="/inventory/">
-Inventario
 </a>
 
 <a href="/reports/">
@@ -67,8 +91,13 @@ Usuarios
 class="logout"
 href="/logout"
 >
-Cerrar sesión
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+<path d="M10 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H10"></path>
+<path d="M14 8l4 4-4 4M9 12h9"></path>
+</svg>
+<span>Cerrar sesión</span>
 </a>
+</div>
 
 </nav>
 
@@ -76,11 +105,11 @@ Cerrar sesión
 <main>
 
 {% with messages =
-get_flashed_messages() %}
+get_flashed_messages(with_categories=true) %}
 
-{% for message in messages %}
+{% for category, message in messages %}
 
-<div class="alert">
+<div class="alert alert-{{ category }}">
 
 {{ message }}
 
@@ -96,6 +125,23 @@ get_flashed_messages() %}
 {% endblock %}
 
 </main>
+
+<div
+class="loading-screen"
+id="loading-screen"
+aria-hidden="true"
+>
+<div class="loading-card" role="status" aria-live="polite">
+<span class="loading-spinner" aria-hidden="true"></span>
+<span class="loading-message">Procesando...</span>
+</div>
+</div>
+
+<script src="{{ url_for('static', filename='js/ui.js', v='music-playback-state-20261019') }}" defer></script>
+<script src="{{ url_for('static', filename='js/product-brands.js', v='product-brands-20261014') }}" defer></script>
+{% if session.get("user_id") %}
+{% include "_music_player.html" %}
+{% endif %}
 
 </body>
 

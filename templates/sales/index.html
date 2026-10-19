@@ -2,222 +2,163 @@
 
 {% block content %}
 
-<h1>
-Ventas
-</h1>
-
-<form
-class="card form"
-method="POST"
->
-
-<select
-name="customer_id"
-required
->
-
-<option value="">
-Cliente
-</option>
-
-{% for customer in customers %}
-
-<option
-value="{{ customer.id }}"
->
-
-{{ customer.name }}
-
-</option>
-
-{% endfor %}
-
-</select>
-
-
-<select
-name="product_id"
-required
->
-
-<option value="">
-Producto
-</option>
-
-{% for product in products %}
-
-<option
-value="{{ product.id }}"
->
-
-{{ product.name }}
--
-${{ "{:,.0f}".format(product.sale_price) }}
-
-</option>
-
-{% endfor %}
-
-</select>
-
-
-<select
-name="payment_method"
->
-
-<option>
-Nequi
-</option>
-
-<option>
-Transferencia
-</option>
-
-<option>
-Efectivo
-</option>
-
-<option>
-Otro
-</option>
-
-</select>
-
-
-<button>
-Registrar venta
-</button>
-
-</form>
-
-
-<div class="card">
-
-<table>
-
-<tr>
-
-<th>
-ID
-</th>
-
-<th>
-Cliente
-</th>
-
-<th>
-Producto
-</th>
-
-<th>
-Vence
-</th>
-
-<th>
-Pago
-</th>
-
-<th>
-Valor
-</th>
-
-<th>
-Acciones
-</th>
-
-</tr>
-
-
-{% for sale in sales %}
-
-<tr>
-
-<td>
-#{{ sale.id }}
-</td>
-
-<td>
-{{ sale.customer.name }}
-</td>
-
-<td>
-{{ sale.product.name }}
-</td>
-
-<td>
-{{ sale.expires_at }}
-</td>
-
-<td>
-
-<span class="badge">
-
-{{ sale.payment_status }}
-
-</span>
-
-</td>
-
-<td>
-${{ "{:,.0f}".format(sale.price) }}
-</td>
-
-<td>
-
-{% if session.get("role") == "admin"
-and sale.payment_status == "pending" %}
-
-<form
-method="POST"
-action="/payments/{{ sale.id }}"
->
-
-<input
-name="reference"
-placeholder="Referencia"
-/>
-
-<button
-name="action"
-value="verify"
->
-
-Verificar
-
-</button>
-
-<button
-name="action"
-value="reject"
->
-
-Rechazar
-
-</button>
-
-</form>
-
+<header class="page-heading">
+<div>
+<span class="eyebrow">GESTIÓN DE PEDIDOS</span>
+<h1>Ventas</h1>
+<p>Registra una venta y completa el pago del comprador de forma segura con PSE.</p>
+</div>
+</header>
+
+{% if not pse_configured %}
+<div class="payment-notice payment-notice-warning" role="status">
+<strong>Pagos PSE pendientes de configuración</strong>
+<span>Al crear tu cuenta Wompi, agrega sus llaves privadas al archivo local <code>.env</code>. No compartas esas llaves en el navegador ni en el chat.</span>
+</div>
 {% endif %}
 
+<section class="card sale-payment-card">
+<div class="sale-payment-heading">
+<div>
+<span class="eyebrow sale-step"><span>01</span> NUEVA OPERACIÓN</span>
+<h2>Registrar una venta</h2>
+<p>Selecciona el producto. El comprador elegirá su banco en el siguiente paso.</p>
+</div>
+<span class="pse-badge" aria-label="Método de pago PSE">
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<path d="M4 7h16M6 4h12M6 20h12M4 17h16M7 7v10m5-10v10m5-10v10"></path>
+</svg>
+PAGO POR PSE
+</span>
+</div>
 
 <form
+class="form sale-form"
 method="POST"
-action="/renewals/{{ sale.id }}"
+data-loading-message="Preparando pago seguro..."
 >
-<button>
-Renovar
-</button>
-
-</form>
-
-</td>
-
-</tr>
-
+<input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+<fieldset class="form-field sale-product-field">
+<legend>Elige el servicio</legend>
+<div class="product-brand-grid" role="radiogroup" aria-label="Productos disponibles">
+{% for product in products %}
+{% set brand = product_brand(product.name) %}
+<label class="product-brand-option">
+<input
+type="radio"
+name="product_id"
+value="{{ product.id }}"
+data-price="{{ product.sale_price }}"
+required
+>
+<span class="product-brand-tile"{% if brand %} style="--brand-color: #{{ brand.color }}"{% endif %}>
+{% if brand %}
+<img
+class="product-brand-logo{% if brand.is_wordmark %} product-brand-logo-wordmark{% endif %}"
+src="{{ brand.icon_url }}"
+alt=""
+loading="lazy"
+decoding="async"
+>
+<span class="product-brand-fallback" aria-hidden="true">{{ brand.initials }}</span>
+{% else %}
+<span class="product-brand-fallback product-brand-fallback-visible" aria-hidden="true">{{ product.name[:2]|upper }}</span>
+{% endif %}
+</span>
+<span class="product-brand-name">{{ product.name }}</span>
+<span class="product-brand-price">${{ "{:,.0f}".format(product.sale_price) }} COP</span>
+</label>
 {% endfor %}
-
-</table>
-
 </div>
+<small>Elige una cuenta. El precio aparece en el resumen de pago.</small>
+</fieldset>
+
+<aside class="sale-order-card" aria-live="polite" aria-atomic="true">
+<div class="sale-order-total">
+<span class="sale-order-caption">TOTAL A PAGAR</span>
+<strong id="sale-total">—</strong>
+<span class="sale-order-currency">COP</span>
+</div>
+<div class="sale-payment-method">
+<span class="sale-payment-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24"><path d="M3.5 9h17M5 5.5h14A1.5 1.5 0 0 1 20.5 7v10a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 17V7A1.5 1.5 0 0 1 5 5.5Z"/><path d="M7 14h4"/></svg>
+</span>
+<span><strong>Transferencia bancaria PSE</strong><small>El comprador paga desde su banco.</small></span>
+</div>
+</aside>
+
+<button class="button button-primary sale-submit" type="submit" {% if not pse_configured %}disabled{% endif %}>
+Continuar al pago seguro
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+</button>
+</form>
+<div class="sale-trust-note">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.5-2.8 8-7 10-4.2-2-7-5.5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+<span>Pago procesado por Wompi. El dinero se recibe en la cuenta bancaria configurada por el comercio.</span>
+</div>
+</section>
+
+<section class="card sales-history">
+<div class="sales-history-heading">
+<div>
+<span class="eyebrow">ACTIVIDAD RECIENTE</span>
+<h2>Historial de ventas</h2>
+</div>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Producto</th>
+<th>Vence</th>
+<th>Pago</th>
+<th>Valor</th>
+<th>Acciones</th>
+</tr>
+</thead>
+<tbody>
+{% for sale in sales %}
+<tr>
+<td>#{{ sale.id }}</td>
+<td>{{ sale.product.name }}</td>
+<td>{{ sale.expires_at }}</td>
+<td>
+<span class="payment-status payment-status-{{ sale.payment_status }}">
+{{ sale.payment_status }}
+</span>
+</td>
+<td>${{ "{:,.0f}".format(sale.price) }} COP</td>
+<td>
+<div class="sale-actions">
+{% if sale.payment_status != "verified" %}
+{% if sale.id in pending_payment_sale_ids %}
+<span class="payment-in-progress">PSE en proceso</span>
+{% elif pse_configured %}
+<a class="button button-secondary" href="{{ url_for('payments.pse_checkout', sale_id=sale.id) }}">
+Pagar por PSE
+</a>
+{% endif %}
+{% endif %}
+
+{% if sale.payment_status == "verified" %}
+<form method="POST" action="{{ url_for('renewals.renew', sale_id=sale.id) }}">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+<button class="button button-secondary" type="submit">Renovar por PSE</button>
+</form>
+{% endif %}
+</div>
+</td>
+</tr>
+{% else %}
+<tr>
+<td colspan="6" class="table-empty">Aún no hay ventas registradas.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</section>
+
+<script src="{{ url_for('static', filename='js/sales.js', v='sales-brand-picker-20261014') }}" defer></script>
 
 {% endblock %}

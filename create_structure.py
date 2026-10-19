@@ -19,6 +19,9 @@ gunicorn==23.0.0
 
 files[".env"] = """SECRET_KEY=CAMBIA_ESTA_CLAVE_POR_UNA_MUY_SEGURA
 
+ADMIN_USERNAME=
+ADMIN_PASSWORD=
+
 DATABASE_URL=sqlite:///stream_panel.db
 
 PORT=5000
@@ -37,6 +40,9 @@ WHATSAPP_WEBHOOK_VERIFY_TOKEN=
 # ============================================================
 
 files[".env.example"] = """SECRET_KEY=CAMBIA_ESTA_CLAVE
+
+ADMIN_USERNAME=
+ADMIN_PASSWORD=
 
 DATABASE_URL=sqlite:///stream_panel.db
 
@@ -118,6 +124,7 @@ db = SQLAlchemy()
 # ============================================================
 
 files["config.py"] = """import os
+import secrets
 
 from dotenv import load_dotenv
 
@@ -126,10 +133,10 @@ load_dotenv()
 
 class Config:
 
-    SECRET_KEY = os.getenv(
-        "SECRET_KEY",
-        "cambia-esta-clave"
-    )
+    SECRET_KEY = os.getenv("SECRET_KEY") or secrets.token_hex(32)
+
+    ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "").strip()
+    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 
     DATABASE_URL = os.getenv(
         "DATABASE_URL",
@@ -640,80 +647,9 @@ def index():
         "dashboard/index.html",
         revenue=revenue,
         profit=profit,
-        customers=Customer.query.count(),
         expiring=expiring,
         labels=labels,
         values=values
-    )
-"""
-
-files["routes/customers.py"] = """
-from flask import (
-    Blueprint,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    flash,
-    session
-)
-
-from extensions import db
-from models.customer import Customer
-
-
-customers_bp = Blueprint(
-    "customers",
-    __name__,
-    url_prefix="/customers"
-)
-
-
-def required_login():
-
-    return "user_id" in session
-
-
-@customers_bp.route(
-    "/",
-    methods=["GET", "POST"]
-)
-def index():
-
-    if not required_login():
-
-        return redirect(
-            url_for("auth.login")
-        )
-
-    if request.method == "POST":
-
-        customer = Customer(
-            name=request.form["name"],
-            phone=request.form.get("phone"),
-            email=request.form.get("email"),
-            notes=request.form.get("notes")
-        )
-
-        db.session.add(customer)
-
-        db.session.commit()
-
-        flash(
-            "Cliente creado correctamente."
-        )
-
-        return redirect(
-            url_for("customers.index")
-        )
-
-    customers = Customer.query.order_by(
-        Customer.id.desc()
-    ).all()
-
-    return render_template(
-        "customers/index.html",
-        customers=customers
     )
 """
 
@@ -1448,7 +1384,6 @@ def create_app():
 
     from routes.auth import auth_bp
     from routes.dashboard import dashboard_bp
-    from routes.customers import customers_bp
     from routes.products import products_bp
     from routes.inventory import inventory_bp
     from routes.sales import sales_bp
@@ -1463,10 +1398,6 @@ def create_app():
 
     app.register_blueprint(
         dashboard_bp
-    )
-
-    app.register_blueprint(
-        customers_bp
     )
 
     app.register_blueprint(
@@ -1511,26 +1442,31 @@ def create_app():
         db.create_all()
 
         admin = User.query.filter_by(
-            username="admin"
+            username=Config.ADMIN_USERNAME or "admin"
         ).first()
 
         if not admin:
+            if bool(Config.ADMIN_USERNAME) != bool(Config.ADMIN_PASSWORD):
+                raise RuntimeError(
+                    "Configura ADMIN_USERNAME y ADMIN_PASSWORD juntos."
+                )
 
-            admin = User(
-                name="Administrador",
-                username="admin",
-                role="admin"
-            )
+            if Config.ADMIN_USERNAME:
+                if len(Config.ADMIN_PASSWORD) < 12:
+                    raise RuntimeError(
+                        "ADMIN_PASSWORD debe tener al menos 12 caracteres."
+                    )
 
-            admin.set_password(
-                "Admin123!"
-            )
+                admin = User(
+                    name="Administrador",
+                    username=Config.ADMIN_USERNAME,
+                    role="admin"
+                )
 
-            db.session.add(
-                admin
-            )
+                admin.set_password(Config.ADMIN_PASSWORD)
 
-            db.session.commit()
+                db.session.add(admin)
+                db.session.commit()
 
     @app.route("/health")
     def health():
@@ -1597,10 +1533,6 @@ Dashboard
 
 <a href="/sales/">
 Ventas
-</a>
-
-<a href="/customers/">
-Clientes
 </a>
 
 {% if session.get("role") == "admin" %}
@@ -1738,12 +1670,6 @@ Iniciar sesión
 
 </form>
 
-<p class="small">
-Usuario inicial: admin
-<br>
-Contraseña: Admin123!
-</p>
-
 </div>
 
 </body>
@@ -1794,19 +1720,6 @@ ${{ "{:,.0f}".format(profit) }}
 <div class="card">
 
 <span>
-Clientes
-</span>
-
-<strong>
-{{ customers }}
-</strong>
-
-</div>
-
-
-<div class="card">
-
-<span>
 Vencen en 7 días
 </span>
 
@@ -1843,106 +1756,6 @@ window.salesValues =
 <script
 src="{{ url_for('static', filename='js/dashboard.js') }}"
 ></script>
-
-{% endblock %}
-"""
-
-# ============================================================
-# CUSTOMERS
-# ============================================================
-
-files["templates/customers/index.html"] = """{% extends "base.html" %}
-
-{% block content %}
-
-<h1>
-Clientes
-</h1>
-
-<form
-class="card form"
-method="POST"
->
-
-<input
-name="name"
-placeholder="Nombre completo"
-required
->
-
-<input
-name="phone"
-placeholder="Teléfono / WhatsApp"
->
-
-<input
-name="email"
-placeholder="Correo electrónico"
->
-
-<textarea
-name="notes"
-placeholder="Notas"
-></textarea>
-
-<button>
-Crear cliente
-</button>
-
-</form>
-
-
-<div class="card">
-
-<table>
-
-<tr>
-
-<th>
-Nombre
-</th>
-
-<th>
-Teléfono
-</th>
-
-<th>
-Email
-</th>
-
-<th>
-Fecha
-</th>
-
-</tr>
-
-{% for customer in customers %}
-
-<tr>
-
-<td>
-{{ customer.name }}
-</td>
-
-<td>
-{{ customer.phone or "-" }}
-</td>
-
-<td>
-{{ customer.email or "-" }}
-</td>
-
-<td>
-{{ customer.created_at }}
-</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
-
-</div>
 
 {% endblock %}
 """
@@ -2567,9 +2380,5 @@ print()
 print("Luego abre:")
 print("http://127.0.0.1:5000")
 print()
-print("Usuario:")
-print("admin")
-print()
-print("Contraseña:")
-print("Admin123!")
+print("Configura ADMIN_USERNAME y ADMIN_PASSWORD en .env.")
 print()

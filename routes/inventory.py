@@ -42,11 +42,14 @@ def index():
             product_id=int(
                 request.form["product_id"]
             ),
-            reference=request.form["reference"],
+            reference="",
             status="available"
         )
 
         db.session.add(item)
+        db.session.flush()
+
+        item.reference = f"INV-{item.id:06d}"
 
         db.session.commit()
 

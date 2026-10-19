@@ -1,6 +1,9 @@
 from extensions import db
 
 
+SYSTEM_WALK_IN_CUSTOMER_MARKER = "__system_walk_in_customer__"
+
+
 class Customer(db.Model):
 
     __tablename__ = "customers"

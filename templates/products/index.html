@@ -2,60 +2,90 @@
 
 {% block content %}
 
-<h1>
-Productos
-</h1>
+<header class="page-heading products-page-heading">
+<div>
+<span class="eyebrow">CATÁLOGO Y PRECIOS</span>
+<h1>Productos</h1>
+<p>Administra los servicios, sus costos y las tarifas para reventa desde un solo lugar.</p>
+</div>
+<span class="products-count">{{ products|length }} productos</span>
+</header>
 
-<form
-class="card form"
-method="POST"
->
+<section class="card product-create-card" aria-labelledby="product-create-title">
+<div class="product-panel-heading">
+<div>
+<span class="eyebrow">NUEVO EN EL CATÁLOGO</span>
+<h2 id="product-create-title">Crear producto</h2>
+<p>Completa la información básica y define los precios en pesos colombianos (COP).</p>
+</div>
+</div>
+<form class="product-create-form" method="POST">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
 
-<input
-name="name"
-placeholder="Nombre del producto"
-required
->
+<label class="product-field">
+<span>Nombre del producto</span>
+<input name="name" placeholder="Ej. Streaming Premium" required>
+<small>Nombre del servicio o plan que ofrecerás.</small>
+</label>
 
-<input
-name="provider"
-placeholder="Proveedor"
->
+<label class="product-field">
+<span>Proveedor o categoría</span>
+<input name="provider" placeholder="Ej. Streaming o Música">
+<small>Ayuda a identificar y organizar el servicio.</small>
+</label>
 
-<input
-name="duration_days"
-type="number"
-value="30"
-placeholder="Duración en días"
-required
->
+<label class="product-field">
+<span>Duración del servicio</span>
+<span class="product-input-suffix">
+<input name="duration_days" type="number" min="1" value="30" required>
+<span>días</span>
+</span>
+<small>Tiempo de vigencia de cada unidad vendida.</small>
+</label>
 
-<input
-name="sale_price"
-type="number"
-placeholder="Precio de venta"
-required
->
+<label class="product-field">
+<span>Precio de venta <b>COP</b></span>
+<input name="sale_price" type="number" min="0" step="0.01" placeholder="Ej. 25000" required>
+<small>Precio que paga tu cliente final.</small>
+</label>
 
-<input
-name="cost_price"
-type="number"
-placeholder="Costo"
-required
->
+<label class="product-field">
+<span>Costo por unidad <b>COP</b></span>
+<input name="cost_price" type="number" min="0" step="0.01" placeholder="Ej. 15000" required>
+<small>Lo que te cuesta adquirir el servicio.</small>
+</label>
 
-<button>
-Crear producto
-</button>
+<label class="product-field">
+<span>Precio mayorista <b>COP · opcional</b></span>
+<input name="wholesale_price" type="number" min="0.01" step="0.01" placeholder="Ej. 18000">
+<small>Tarifa por unidad para compras de revendedores.</small>
+</label>
 
+<label class="product-field">
+<span>Margen sugerido <b>%</b></span>
+<input name="suggested_margin_percent" type="number" min="0" step="0.01" value="40">
+<small>Porcentaje recomendado para reventa; se guarda al definir precio mayorista.</small>
+</label>
+
+<div class="product-create-submit">
+<span>Los campos marcados como opcionales pueden configurarse después.</span>
+<button type="submit">Crear producto</button>
+</div>
 </form>
+</section>
 
+<section class="card product-table-card" aria-labelledby="product-list-title">
+<div class="product-panel-heading product-list-heading">
+<div>
+<span class="eyebrow">GESTIÓN DEL CATÁLOGO</span>
+<h2 id="product-list-title">Productos registrados</h2>
+<p>Consulta los valores actuales y modifica los campos desde cada producto.</p>
+</div>
+</div>
 
-<div class="card">
+<table class="admin-products-table">
 
-<table>
-
-<tr>
+<tr class="admin-products-header">
 
 <th>
 Producto
@@ -78,42 +108,90 @@ Costo
 </th>
 
 <th>
-Acciones
+Mayorista
 </th>
+
+<th>
+Margen sugerido
+</th>
+
+<th>Editar precios</th>
 
 </tr>
 
 {% for product in products %}
 
-<tr>
+<tr class="admin-product-row">
 
-<td>
+<td data-label="Producto">
+<span class="product-admin-name">
+{% set brand = product_brand(product.name) %}
+{% if brand %}
+<span class="product-brand-tile product-brand-tile-compact" style="--brand-color: #{{ brand.color }}">
+<img class="product-brand-logo{% if brand.is_wordmark %} product-brand-logo-wordmark{% endif %}" src="{{ brand.icon_url }}" alt="" loading="lazy" decoding="async">
+<span class="product-brand-fallback" aria-hidden="true">{{ brand.initials }}</span>
+</span>
+{% endif %}
 {{ product.name }}
+</span>
 </td>
 
-<td>
+<td data-label="Proveedor">
 {{ product.provider or "-" }}
 </td>
 
-<td>
+<td data-label="Duración">
 {{ product.duration_days }} días
 </td>
 
-<td>
+<td data-label="Venta">
 ${{ "{:,.0f}".format(product.sale_price) }}
 </td>
 
-<td>
+<td data-label="Costo">
 ${{ "{:,.0f}".format(product.cost_price) }}
 </td>
 
-<td>
+<td data-label="Mayorista">
+{% if product.wholesale_offer %}
+${{ "{:,.0f}".format(product.wholesale_offer.wholesale_price) }}
+{% else %}
+Sin configurar
+{% endif %}
+</td>
 
-<!-- Inline edit form -->
-<form method="POST" action="/products/{{ product.id }}/edit" style="display:flex;gap:8px;align-items:center;">
-    <input name="sale_price" type="number" step="0.01" value="{{ product.sale_price }}" placeholder="Precio" style="width:100px;" />
-    <input name="cost_price" type="number" step="0.01" value="{{ product.cost_price }}" placeholder="Costo" style="width:100px;" />
-    <input name="duration_days" type="number" value="{{ product.duration_days }}" placeholder="Duración" style="width:80px;" />
+<td data-label="Margen sugerido">
+{% if product.wholesale_offer %}
+{{ product.wholesale_offer.suggested_margin_percent }}%
+{% else %}
+-
+{% endif %}
+</td>
+
+<td class="admin-product-actions" data-label="Editar precios">
+
+<form class="product-edit-form" method="POST" action="/products/{{ product.id }}/edit">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <label class="product-edit-field">
+        <span>Venta · COP</span>
+        <input name="sale_price" type="number" min="0" step="0.01" value="{{ product.sale_price }}" aria-label="Precio de venta en COP" />
+    </label>
+    <label class="product-edit-field">
+        <span>Costo · COP</span>
+        <input name="cost_price" type="number" min="0" step="0.01" value="{{ product.cost_price }}" aria-label="Costo por unidad en COP" />
+    </label>
+    <label class="product-edit-field">
+        <span>Duración · días</span>
+        <input name="duration_days" type="number" min="1" value="{{ product.duration_days }}" aria-label="Duración en días" />
+    </label>
+    <label class="product-edit-field">
+        <span>Mayorista · COP</span>
+        <input name="wholesale_price" type="number" min="0.01" step="0.01" value="{{ product.wholesale_offer.wholesale_price if product.wholesale_offer else '' }}" placeholder="Opcional" aria-label="Precio mayorista en COP" />
+    </label>
+    <label class="product-edit-field">
+        <span>Margen sugerido · %</span>
+        <input name="suggested_margin_percent" type="number" min="0" step="0.01" value="{{ product.wholesale_offer.suggested_margin_percent if product.wholesale_offer else 40 }}" aria-label="Margen sugerido porcentual" />
+    </label>
     <button type="submit">Guardar</button>
 </form>
 
@@ -125,6 +203,6 @@ ${{ "{:,.0f}".format(product.cost_price) }}
 
 </table>
 
-</div>
+</section>
 
 {% endblock %}

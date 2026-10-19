@@ -8,38 +8,63 @@
 
 <meta
 name="viewport"
-content="width=device-width,initial-scale=1"
+content="width=device-width,initial-scale=1,viewport-fit=cover"
 >
 
 <title>
-StreamPanel Login
+Acceso | StreamPanel PRO
 </title>
 
 <link
-rel="stylesheet"
-href="{{ url_for('static', filename='css/style.css') }}"
+rel="icon"
+type="image/png"
+href="{{ url_for('static', filename='img/brand-logo.png', v='20261014') }}"
 >
+
+<link
+rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css', v='black-gold-luxury-20261014') }}"
+>
+<script src="{{ url_for('static', filename='js/ui.js', v='music-playback-state-20261019') }}" defer></script>
 
 </head>
 
 <body class="login-page">
 
-<div class="login-card">
+<main class="login-layout">
+<section class="login-brand-panel" aria-label="StreamPanel PRO">
+<div class="login-brand">
+<img class="brand-mark" src="{{ url_for('static', filename='img/brand-logo.png') }}" alt="" aria-hidden="true">
+<span>StreamPanel <strong>PRO</strong></span>
+</div>
+<div class="login-pitch">
+<span class="eyebrow">GESTIÓN DE STREAMING</span>
+<h1>Todo tu negocio,<br><span>en una sola vista.</span></h1>
+<p>Administra ventas e inventario desde un espacio creado para trabajar con claridad.</p>
+</div>
+<div class="login-panel-footer">
+<span class="status-dot"></span>
+Plataforma de gestión segura
+</div>
+</section>
 
+<section class="login-form-panel">
+<div class="login-card">
+<span class="eyebrow">BIENVENIDO DE NUEVO</span>
 <h1>
-🚀 StreamPanel
+Ingresa tus credenciales
 </h1>
 
 <p>
-Panel administrativo
+Inicia sesión para continuar.
 </p>
 
 {% with messages =
-get_flashed_messages() %}
+get_flashed_messages(with_categories=true) %}
 
-{% for message in messages %}
+{% for category, message in messages %}
 
-<div class="alert">
+<div class="alert alert-{{ category }}">
 
 {{ message }}
 
@@ -49,34 +74,69 @@ get_flashed_messages() %}
 
 {% endwith %}
 
-<form method="POST">
+<form method="POST" data-loading-message="Verificando acceso...">
 
+<label for="username">Usuario</label>
 <input
+id="username"
 name="username"
+type="text"
+autocomplete="username"
 placeholder="Usuario"
 required
 >
 
+<label for="password">Contraseña</label>
+<div class="password-field">
 <input
+id="password"
 name="password"
 type="password"
+autocomplete="current-password"
 placeholder="Contraseña"
 required
 >
+<button
+class="password-toggle"
+type="button"
+aria-label="Mostrar contraseña"
+aria-pressed="false"
+data-password-toggle="password"
+>
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"></path>
+<circle cx="12" cy="12" r="2.5"></circle>
+</svg>
+</button>
+</div>
 
-<button>
+<button class="button button-primary login-submit">
 Iniciar sesión
 </button>
 
 </form>
 
-<p class="small">
-Usuario inicial: admin
-<br>
-Contraseña: Admin123!
+<p class="register-prompt">
+¿No tienes una cuenta?
+<a href="{{ url_for('auth.register') }}">Crear cuenta</a>
 </p>
 
 </div>
+</section>
+</main>
+
+<div
+class="loading-screen"
+id="loading-screen"
+aria-hidden="true"
+>
+<div class="loading-card" role="status" aria-live="polite">
+<span class="loading-spinner" aria-hidden="true"></span>
+<span class="loading-message">Verificando acceso...</span>
+</div>
+</div>
+
+{% include "_music_player.html" %}
 
 </body>
 
