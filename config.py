@@ -6,6 +6,24 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def normalize_database_url(database_url):
+    if database_url.startswith("postgres://"):
+        return database_url.replace(
+            "postgres://",
+            "postgresql+psycopg://",
+            1
+        )
+
+    if database_url.startswith("postgresql://"):
+        return database_url.replace(
+            "postgresql://",
+            "postgresql+psycopg://",
+            1
+        )
+
+    return database_url
+
+
 class Config:
 
     SECRET_KEY = os.getenv("SECRET_KEY") or secrets.token_hex(32)
@@ -18,12 +36,7 @@ class Config:
         "sqlite:///stream_panel.db"
     )
 
-    if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace(
-            "postgres://",
-            "postgresql+psycopg://",
-            1
-        )
+    DATABASE_URL = normalize_database_url(DATABASE_URL)
 
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
 
